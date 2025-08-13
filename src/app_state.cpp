@@ -16,10 +16,11 @@ void AppState::init() {
       "Idle",
       new DisplayState[2]{
           {"Office Sign",
-           new DisplayState[2]{
-               {"Office Sign - Busy", nullptr, 0, "os-b"},
-               {"Office Sign - Free", nullptr, 0, "os-f"}},
-           2, ""},
+           new DisplayState[3]{
+               {"Meeting", nullptr, 0, "os-meeting"},
+               {"Focus", nullptr, 0, "os-focus"},
+               {"Free", nullptr, 0, "os-free"}},
+           3, ""},
           {"Update", nullptr, 0, "update"}},
       2, ""});
   currentState = rootState.get();
