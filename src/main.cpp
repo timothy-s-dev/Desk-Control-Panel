@@ -1,6 +1,7 @@
 #include "app_state.h"
 #include "display.h"
 #include "mqtt_manager.h"
+#include "ota_manager.h"
 #include "rotary_encoder.h"
 #include "time_manager.h"
 #include <Arduino.h>
@@ -46,7 +47,6 @@ const std::array<int, BUTTON_COUNT> BUTTON_PINS = {
 const int SERIAL_BAUD_RATE = 115200;
 
 void setup_buttons();
-void saveMQTTConfig();
 void saveConfigCallback();
 void init_wifi();
 
@@ -64,6 +64,7 @@ void setup() {
 
   init_wifi();
   
+  OTAManager::getInstance().init();
   AppState::getInstance().init();
   TimeManager::getInstance().init();
   MQTTManager::getInstance().init();

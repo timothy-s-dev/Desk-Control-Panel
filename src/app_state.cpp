@@ -1,5 +1,7 @@
 #include "app_state.h"
 #include "mqtt_manager.h"
+#include "display.h"
+#include "ota_manager.h"
 #include <Arduino.h>
 
 const int TIMEOUT_MS = 3000;
@@ -18,7 +20,7 @@ void AppState::init() {
                {"Office Sign - Busy", nullptr, 0, "os-b"},
                {"Office Sign - Free", nullptr, 0, "os-f"}},
            2, ""},
-          {"SubState 2", nullptr, 0, "Action 2"}},
+          {"Update", nullptr, 0, "update"}},
       2, ""});
   currentState = rootState.get();
 }
@@ -51,9 +53,13 @@ void AppState::onSelect() {
         currentState = targetState;
         currentSubStateIndex = 0;
       } else if (!targetState->serialAction.isEmpty()) {
+        if (targetState->serialAction == "update") {
+          OTAManager::getInstance().checkForUpdate();
+        } else {
         MQTTManager::getInstance().publishAction(targetState->serialAction);
         resetToRoot();
         lastInput = -1;
+        }
       }
     }
 }

@@ -1,4 +1,5 @@
 #include "mqtt_manager.h"
+#include "config.h"
 #include <Arduino.h>
 #include <ctime>
 #include <Preferences.h>
@@ -124,7 +125,7 @@ auto MQTTManager::mqttReconnect() -> void {
     
     // Publish firmware version or build info
     topic = String(mqtt_topic_prefix) + "version";
-    mqtt_client.publish(topic.c_str(), "1.0.0", true);
+    mqtt_client.publish(topic.c_str(), VERSION, true);
     
     // Publish Home Assistant discovery message
     publishDiscoveryMessage();
@@ -150,12 +151,12 @@ auto MQTTManager::publishDiscoveryMessage() -> void {
   dev["name"] = "Desk Control Panel";
   dev["mf"] = "Custom";
   dev["mdl"] = "Desk Control Panel";
-  dev["sw"] = "1.0.0";
-  
+  dev["sw"] = VERSION;
+
   // Origin information
   JsonObject origin = doc["o"].to<JsonObject>();
   origin["name"] = "Desk Control Panel";
-  origin["sw"] = "1.0.0";
+  origin["sw"] = VERSION;
   origin["url"] = "http://" + device_ip;
   
   // Components
