@@ -1,6 +1,7 @@
 #include "mqtt_manager.h"
 #include "config.h"
 #include "sign_state.h"
+#include "app_state.h"
 #include <Arduino.h>
 #include <ctime>
 #include <Preferences.h>
@@ -135,6 +136,9 @@ auto MQTTManager::mqttReconnect() -> void {
     // Subscribe to sign image topic
     subscribeToSignImage();
     
+    // Subscribe to status topics
+    subscribeToStatusTopics();
+    
   } else {
     Logger.error(MAIN_LOG, "MQTT connection failed, rc=%d. Retrying in %lu ms", mqtt_client.state(), MQTT_RECONNECT_INTERVAL);
   }
@@ -235,6 +239,23 @@ auto MQTTManager::subscribeToSignImage() -> void {
   }
 }
 
+auto MQTTManager::subscribeToStatusTopics() -> void {
+  const char* lightTopic = "desk-control/light-status";
+  const char* fanTopic = "desk-control/fan-status";
+  
+  if (mqtt_client.subscribe(lightTopic)) {
+    Logger.debug(MAIN_LOG, "Subscribed to light status topic: %s", lightTopic);
+  } else {
+    Logger.error(MAIN_LOG, "Failed to subscribe to light status topic: %s", lightTopic);
+  }
+  
+  if (mqtt_client.subscribe(fanTopic)) {
+    Logger.debug(MAIN_LOG, "Subscribed to fan status topic: %s", fanTopic);
+  } else {
+    Logger.error(MAIN_LOG, "Failed to subscribe to fan status topic: %s", fanTopic);
+  }
+}
+
 auto MQTTManager::onMqttMessage(char* topic, byte* payload, unsigned int length) -> void {
   Logger.debug(MAIN_LOG, "MQTT message received on topic: %s, length: %d", topic, length);
   
@@ -249,5 +270,17 @@ auto MQTTManager::onMqttMessage(char* topic, byte* payload, unsigned int length)
   if (strcmp(topic, "office_sign/image/set") == 0) {
     Logger.debug(MAIN_LOG, "Processing sign image update");
     SignState::getInstance().onImageReceived(message);
+  }
+  // Check if this is a light status update
+  else if (strcmp(topic, "desk-control/light-status") == 0) {
+    Logger.debug(MAIN_LOG, "Processing light status update: %s", message.c_str());
+    bool const lightOn = (message == "on");
+    AppState::getInstance().setLightStatus(lightOn);
+  }
+  // Check if this is a fan status update
+  else if (strcmp(topic, "desk-control/fan-status") == 0) {
+    Logger.debug(MAIN_LOG, "Processing fan status update: %s", message.c_str());
+    bool const fanOn = (message == "on");
+    AppState::getInstance().setFanStatus(fanOn);
   }
 }

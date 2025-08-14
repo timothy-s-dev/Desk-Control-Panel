@@ -1,5 +1,6 @@
 #include "display.h"
 #include "sign_state.h"
+#include "app_state.h"
 #include <Arduino.h>
 #include <Elog.h>
 #include <logging.h>
@@ -10,6 +11,28 @@ const int DISPLAY_HEIGHT = 64;
 const int FONT_HEIGHT = 11;
 const int AVG_FONT_WIDTH = 6;
 const int BOX_SIZE = 8;
+
+const byte LIGHT_ICON[] = {
+  0b10010001,
+  0b01000010,
+  0b00011000,
+  0b10111100,
+  0b00111101,
+  0b00011000,
+  0b00000000,
+  0b00011000
+};
+
+const byte FAN_ICON[] = {
+  0b00001000,
+  0b00001000,
+  0b00011000,
+  0b11111100,
+  0b00111111,
+  0b00011000,
+  0b00010000,
+  0b00010000
+};
 
 auto Display::getInstance() -> Display& {
   static Display instance;
@@ -42,6 +65,9 @@ auto Display::update() -> void {
   
   // Render sign image if available
   renderSignImage();
+  
+  // Render status icons
+  renderStatusIcons();
   
   u8g2.sendBuffer();
 }
@@ -82,9 +108,21 @@ auto Display::renderSignImage() -> void {
   
   const std::vector<uint8_t>& imageData = signState.getImageData();
   
-  // Position the 32x8 image in the bottom right corner of the 128x64 display
-  const int offsetX = DISPLAY_WIDTH - SignState::IMAGE_WIDTH;
-  const int offsetY = DISPLAY_HEIGHT - SignState::IMAGE_HEIGHT;
+  // Position the 32x8 image in the bottom left corner with 1px border and 2px padding
+  const int borderSize = 1;
+  const int paddingSize = 2;
+  const int totalOffset = borderSize + paddingSize;
+  const int offsetX = totalOffset;
+  const int offsetY = DISPLAY_HEIGHT - SignState::IMAGE_HEIGHT - totalOffset;
+  
+  // Draw 1px border around the image (including padding)
+  const int borderX = 0;
+  const int borderY = DISPLAY_HEIGHT - SignState::IMAGE_HEIGHT - 2 * (paddingSize + borderSize);
+  const int borderWidth = SignState::IMAGE_WIDTH + 2 * (paddingSize + borderSize);
+  const int borderHeight = SignState::IMAGE_HEIGHT + 2 * (paddingSize + borderSize);
+  
+  // Draw border frame
+  u8g2.drawFrame(borderX, borderY, borderWidth, borderHeight);
   
   // Render the monochrome bitmap
   for (int y = 0; y < SignState::IMAGE_HEIGHT; y++) {
@@ -99,6 +137,57 @@ auto Display::renderSignImage() -> void {
         if (isPixelSet) {
           u8g2.drawPixel(offsetX + x, offsetY + y);
         }
+      }
+    }
+  }
+}
+
+auto Display::renderStatusIcons() -> void {
+  AppState& appState = AppState::getInstance();
+  
+  const int iconSize = 8;
+  const int borderSize = 1;
+  const int paddingSize = 2;
+  const int iconWithBorder = iconSize + 2 * (paddingSize + borderSize);
+  
+  // Calculate position above the sign (sign is at bottom left)
+  // Sign area: 36x12 (32+4 for padding + 4 for border)
+  const int signAreaWidth = SignState::IMAGE_WIDTH + 2 * (paddingSize + borderSize);
+  const int signAreaHeight = SignState::IMAGE_HEIGHT + 2 * (paddingSize + borderSize);
+  const int iconsY = DISPLAY_HEIGHT - signAreaHeight - iconWithBorder - 2; // 2px gap between icons and sign
+  
+  // Light icon position - left edge aligned with left edge of sign
+  const int lightX = 0;
+  
+  // Fan icon position - right edge aligned with right edge of sign
+  const int fanX = signAreaWidth - iconWithBorder;
+  
+  // Always render both frames
+  u8g2.drawFrame(lightX, iconsY, iconWithBorder, iconWithBorder);
+  u8g2.drawFrame(fanX, iconsY, iconWithBorder, iconWithBorder);
+  
+  // Render light icon content if light is on
+  if (appState.getLightStatus()) {
+    renderIconContent(LIGHT_ICON, lightX, iconsY, iconSize, borderSize, paddingSize);
+  }
+  
+  // Render fan icon content if fan is on
+  if (appState.getFanStatus()) {
+    renderIconContent(FAN_ICON, fanX, iconsY, iconSize, borderSize, paddingSize);
+  }
+}
+
+auto Display::renderIconContent(const byte* iconData, int x, int y, int iconSize, int borderSize, int paddingSize) -> void {
+  // Calculate icon position with border and padding
+  const int iconX = x + borderSize + paddingSize;
+  const int iconY = y + borderSize + paddingSize;
+  
+  // Render the 8x8 icon
+  for (int row = 0; row < iconSize; row++) {
+    byte rowData = iconData[row];
+    for (int col = 0; col < iconSize; col++) {
+      if (rowData & (1 << (7 - col))) { // MSB first
+        u8g2.drawPixel(iconX + col, iconY + row);
       }
     }
   }

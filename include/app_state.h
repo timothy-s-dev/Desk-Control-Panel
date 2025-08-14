@@ -33,6 +33,12 @@ public:
   auto onPrevious() -> void;
   auto tick() -> void;
 
+  // Light and fan status
+  auto setLightStatus(bool status) -> void;
+  auto setFanStatus(bool status) -> void;
+  auto getLightStatus() const -> bool;
+  auto getFanStatus() const -> bool;
+
 private:
   // Private constructor for singleton
   AppState() = default;
@@ -41,6 +47,10 @@ private:
   DisplayState* currentState = nullptr;
   int currentSubStateIndex = -1;
   unsigned long lastInput = -1;
+  
+  // Status variables
+  bool lightStatus = false;
+  bool fanStatus = false;
   
   void resetToRoot();
 };

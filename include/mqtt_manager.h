@@ -20,6 +20,7 @@ public:
   auto publishButtonState(int button_num, bool pressed) -> void;
   auto publishAction(const String& action) -> void;
   auto subscribeToSignImage() -> void;
+  auto subscribeToStatusTopics() -> void;
 
 private:
   MQTTManager() = default;

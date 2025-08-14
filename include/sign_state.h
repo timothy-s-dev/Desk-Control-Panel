@@ -37,11 +37,11 @@ private:
   // Convert RGB image data to monochrome
   auto convertToMonochrome(const String& base64Data) -> std::vector<uint8_t>;
   
+  // Parse BMP file and extract RGB data
+  auto parseBMP(const std::vector<uint8_t>& bmpData) -> std::vector<uint8_t>;
+  
   // Decode base64 string
   auto decodeBase64(const String& encoded) -> std::vector<uint8_t>;
-  
-  // Convert RGB pixel to monochrome (1 bit per pixel)
-  auto rgbToMono(uint8_t r, uint8_t g, uint8_t b) -> bool;
   
   std::vector<uint8_t> monochromeImageData;
   bool imageDataAvailable = false;

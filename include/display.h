@@ -31,6 +31,8 @@ private:
 
   auto printCentered(const char* text, int y) -> void;
   auto renderSignImage() -> void;
+  auto renderStatusIcons() -> void;
+  auto renderIconContent(const byte* iconData, int x, int y, int iconSize, int borderSize, int paddingSize) -> void;
 };
 
 #endif // DISPLAY_H

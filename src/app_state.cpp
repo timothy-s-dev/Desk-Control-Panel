@@ -98,3 +98,19 @@ void AppState::tick() {
     lastInput = -1;
   }
 }
+
+auto AppState::setLightStatus(bool status) -> void {
+  lightStatus = status;
+}
+
+auto AppState::setFanStatus(bool status) -> void {
+  fanStatus = status;
+}
+
+auto AppState::getLightStatus() const -> bool {
+  return lightStatus;
+}
+
+auto AppState::getFanStatus() const -> bool {
+  return fanStatus;
+}
