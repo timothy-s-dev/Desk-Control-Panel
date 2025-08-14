@@ -21,6 +21,7 @@ public:
   auto publishAction(const String& action) -> void;
   auto subscribeToSignImage() -> void;
   auto subscribeToStatusTopics() -> void;
+  auto subscribeToPcMonitoring() -> void;
 
 private:
   MQTTManager() = default;

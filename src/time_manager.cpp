@@ -126,7 +126,6 @@ auto TimeManager::updateTimeDisplay() -> void {
     if (rootState != nullptr) {
       rootState->label = timeString;
     }
-    Logger.debug(MAIN_LOG, "Time updated: %s", timeString.c_str());
   } else {
     Logger.error(MAIN_LOG, "Failed to get local time!");
   }

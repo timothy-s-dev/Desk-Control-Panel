@@ -114,3 +114,59 @@ auto AppState::getLightStatus() const -> bool {
 auto AppState::getFanStatus() const -> bool {
   return fanStatus;
 }
+
+auto AppState::setPcStatus(bool status) -> void {
+  pcStatus = status;
+}
+
+auto AppState::setCpuTemp(float temp) -> void {
+  cpuTemp = temp;
+}
+
+auto AppState::setCpuUsage(float usage) -> void {
+  cpuUsage = usage;
+}
+
+auto AppState::setGpuTemp(float temp) -> void {
+  gpuTemp = temp;
+}
+
+auto AppState::setGpuUsage(float usage) -> void {
+  gpuUsage = usage;
+}
+
+auto AppState::setRamUsage(float usage) -> void {
+  ramUsage = usage;
+}
+
+auto AppState::setGpuMemUsage(float usage) -> void {
+  gpuMemUsage = usage;
+}
+
+auto AppState::getPcStatus() const -> bool {
+  return pcStatus;
+}
+
+auto AppState::getCpuTemp() const -> float {
+  return cpuTemp;
+}
+
+auto AppState::getCpuUsage() const -> float {
+  return cpuUsage;
+}
+
+auto AppState::getGpuTemp() const -> float {
+  return gpuTemp;
+}
+
+auto AppState::getGpuUsage() const -> float {
+  return gpuUsage;
+}
+
+auto AppState::getRamUsage() const -> float {
+  return ramUsage;
+}
+
+auto AppState::getGpuMemUsage() const -> float {
+  return gpuMemUsage;
+}

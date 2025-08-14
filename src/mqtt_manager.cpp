@@ -139,6 +139,9 @@ auto MQTTManager::mqttReconnect() -> void {
     // Subscribe to status topics
     subscribeToStatusTopics();
     
+    // Subscribe to PC monitoring topics
+    subscribeToPcMonitoring();
+    
   } else {
     Logger.error(MAIN_LOG, "MQTT connection failed, rc=%d. Retrying in %lu ms", mqtt_client.state(), MQTT_RECONNECT_INTERVAL);
   }
@@ -256,6 +259,27 @@ auto MQTTManager::subscribeToStatusTopics() -> void {
   }
 }
 
+auto MQTTManager::subscribeToPcMonitoring() -> void {
+  const char* pcStatusTopic = "homeassistant/sensor/pc_status_monitor_status/status";
+  const char* cpuTempTopic = "homeassistant/sensor/pc_status_monitor_cpu_temp_avg/state";
+  const char* cpuUsageTopic = "homeassistant/sensor/pc_status_monitor_cpu_usage_avg/state";
+  const char* gpuTempTopic = "homeassistant/sensor/pc_status_monitor_gpu_temp/state";
+  const char* gpuUsageTopic = "homeassistant/sensor/pc_status_monitor_gpu_util/state";
+  const char* ramUsageTopic = "homeassistant/sensor/pc_status_monitor_ram_usage/state";
+  const char* gpuMemTopic = "homeassistant/sensor/pc_status_monitor_gpu_mem_util/state";
+  
+  const char* topics[] = {pcStatusTopic, cpuTempTopic, cpuUsageTopic, gpuTempTopic, 
+                         gpuUsageTopic, ramUsageTopic, gpuMemTopic};
+  
+  for (const char* topic : topics) {
+    if (mqtt_client.subscribe(topic)) {
+      Logger.debug(MAIN_LOG, "Subscribed to PC monitoring topic: %s", topic);
+    } else {
+      Logger.error(MAIN_LOG, "Failed to subscribe to PC monitoring topic: %s", topic);
+    }
+  }
+}
+
 auto MQTTManager::onMqttMessage(char* topic, byte* payload, unsigned int length) -> void {
   Logger.debug(MAIN_LOG, "MQTT message received on topic: %s, length: %d", topic, length);
   
@@ -282,5 +306,47 @@ auto MQTTManager::onMqttMessage(char* topic, byte* payload, unsigned int length)
     Logger.debug(MAIN_LOG, "Processing fan status update: %s", message.c_str());
     bool const fanOn = (message == "on");
     AppState::getInstance().setFanStatus(fanOn);
+  }
+  // Check if this is a PC status update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_status/status") == 0) {
+    Logger.debug(MAIN_LOG, "Processing PC status update: %s", message.c_str());
+    bool const pcOn = (message == "ON");
+    AppState::getInstance().setPcStatus(pcOn);
+  }
+  // Check if this is a CPU temperature update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_cpu_temp_avg/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing CPU temp update: %s", message.c_str());
+    float const temp = message.toFloat();
+    AppState::getInstance().setCpuTemp(temp);
+  }
+  // Check if this is a CPU usage update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_cpu_usage_avg/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing CPU usage update: %s", message.c_str());
+    float const usage = message.toFloat();
+    AppState::getInstance().setCpuUsage(usage);
+  }
+  // Check if this is a GPU temperature update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_gpu_temp/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing GPU temp update: %s", message.c_str());
+    float const temp = message.toFloat();
+    AppState::getInstance().setGpuTemp(temp);
+  }
+  // Check if this is a GPU usage update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_gpu_util/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing GPU usage update: %s", message.c_str());
+    float const usage = message.toFloat();
+    AppState::getInstance().setGpuUsage(usage);
+  }
+  // Check if this is a RAM usage update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_ram_usage/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing RAM usage update: %s", message.c_str());
+    float const usage = message.toFloat();
+    AppState::getInstance().setRamUsage(usage);
+  }
+  // Check if this is a GPU memory usage update
+  else if (strcmp(topic, "homeassistant/sensor/pc_status_monitor_gpu_mem_util/state") == 0) {
+    Logger.debug(MAIN_LOG, "Processing GPU mem usage update: %s", message.c_str());
+    float const usage = message.toFloat();
+    AppState::getInstance().setGpuMemUsage(usage);
   }
 }
