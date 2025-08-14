@@ -69,6 +69,9 @@ auto Display::update() -> void {
   // Render status icons
   renderStatusIcons();
   
+  // Render PC monitoring data
+  renderPcMonitoring();
+  
   u8g2.sendBuffer();
 }
 
@@ -191,4 +194,81 @@ auto Display::renderIconContent(const byte* iconData, int x, int y, int iconSize
       }
     }
   }
+}
+
+auto Display::renderPcMonitoring() -> void {
+  AppState& appState = AppState::getInstance();
+  
+  // Only display if PC is on
+  if (!appState.getPcStatus()) {
+    return;
+  }
+  
+  // Layout calculations
+  const int iconSize = 8;
+  const int borderSize = 1;
+  const int paddingSize = 2;
+  const int iconWithBorder = iconSize + 2 * (paddingSize + borderSize);
+  const int signAreaWidth = SignState::IMAGE_WIDTH + 2 * (paddingSize + borderSize);
+  const int signAreaHeight = SignState::IMAGE_HEIGHT + 2 * (paddingSize + borderSize);
+  
+  // Position to the right of the sign area with some margin
+  const int rightMargin = 0; // Margin from right edge of display
+  const int leftMargin = 8; // Margin from sign area
+  const int availableWidth = DISPLAY_WIDTH - signAreaWidth - leftMargin - rightMargin;
+  
+  // Switch to a smaller font, not a ton of room to work with
+  u8g2.setFont(u8g2_font_6x10_tf);
+  
+  // Line height for this font
+  const int lineHeight = 10;
+  const int columnWidth = availableWidth / 3; // Divide available space into 3 columns
+  
+  // Start position - align with top of status icons area
+  const int statusIconsY = DISPLAY_HEIGHT - signAreaHeight - iconWithBorder - 2;
+  const int startY = statusIconsY + lineHeight - 1; // Account for font baseline
+  
+  // Column positions - right-aligned within available space
+  const int startX = signAreaWidth + leftMargin;
+  const int cpuX = startX;
+  const int gpuX = startX + columnWidth;
+  const int ramX = startX + columnWidth * 2;
+  
+  // Row 1: Labels
+  u8g2.setCursor(cpuX, startY);
+  u8g2.print("CPU");
+  u8g2.setCursor(gpuX, startY);
+  u8g2.print("GPU");
+  u8g2.setCursor(ramX, startY);
+  u8g2.print("RAM");
+  
+  // Row 2: Usage percentages
+  char text[16];
+  snprintf(text, sizeof(text), "%.0f%%", appState.getCpuUsage());
+  u8g2.setCursor(cpuX, startY + lineHeight);
+  u8g2.print(text);
+  
+  snprintf(text, sizeof(text), "%.0f%%", appState.getGpuUsage());
+  u8g2.setCursor(gpuX, startY + lineHeight);
+  u8g2.print(text);
+  
+  snprintf(text, sizeof(text), "%.0f%%", appState.getRamUsage());
+  u8g2.setCursor(ramX, startY + lineHeight);
+  u8g2.print(text);
+  
+  // Row 3: Temperatures/VRAM
+  snprintf(text, sizeof(text), "%.0fC", appState.getCpuTemp());
+  u8g2.setCursor(cpuX, startY + lineHeight * 2);
+  u8g2.print(text);
+  
+  snprintf(text, sizeof(text), "%.0fC", appState.getGpuTemp());
+  u8g2.setCursor(gpuX, startY + lineHeight * 2);
+  u8g2.print(text);
+  
+  snprintf(text, sizeof(text), "%.0f%%", appState.getGpuMemUsage());
+  u8g2.setCursor(ramX, startY + lineHeight * 2);
+  u8g2.print(text);
+  
+  // Restore original font
+  u8g2.setFont(u8g2_font_t0_12b_mf);
 }

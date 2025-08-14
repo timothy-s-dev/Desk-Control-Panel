@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define VERSION "1.3.0"
+#define VERSION "1.4.0"
 
 #define OTAGH_OWNER_NAME "timothy-s-dev"
 #define OTAGH_REPO_NAME "Desk-Control-Panel"
