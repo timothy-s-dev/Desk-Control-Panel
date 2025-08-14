@@ -1,4 +1,5 @@
 #include "display.h"
+#include "sign_state.h"
 #include <Arduino.h>
 #include <Elog.h>
 #include <logging.h>
@@ -26,18 +27,6 @@ auto Display::update() -> void {
   DisplayState* currentState = AppState::getInstance().getCurrentState();
   int const currentSubStateIndex = AppState::getInstance().getCurrentSubStateIndex();
 
-  // Update bouncing box position
-  boxX += boxDeltaX;
-  boxY += boxDeltaY;
-  if (boxX <= 0 || boxX >= (DISPLAY_WIDTH - BOX_SIZE)) {
-    boxDeltaX = -boxDeltaX;
-    boxX += boxDeltaX;
-  }
-  if (boxY <= (2 * FONT_HEIGHT) + 2 || boxY >= (DISPLAY_HEIGHT - BOX_SIZE)) {
-    boxDeltaY = -boxDeltaY;
-    boxY += boxDeltaY;
-  }
-
   // Clear the display and render content
   u8g2.clearBuffer();
 
@@ -50,9 +39,10 @@ auto Display::update() -> void {
     DisplayState* targetState = &currentState->subStates[currentSubStateIndex];
     printCentered(targetState->label.c_str(), FONT_HEIGHT * 2);
   }
-
-  // Draw the bouncing box
-  u8g2.drawBox(boxX, boxY, BOX_SIZE, BOX_SIZE);
+  
+  // Render sign image if available
+  renderSignImage();
+  
   u8g2.sendBuffer();
 }
 
@@ -81,4 +71,35 @@ auto Display::printCentered(const char* text, int y) -> void {
   unsigned int const textOffset = (DISPLAY_WIDTH / 2) - (strlen(text) / 2 * AVG_FONT_WIDTH);
   u8g2.setCursor(textOffset, y);
   u8g2.print(text);
+}
+
+auto Display::renderSignImage() -> void {
+  SignState& signState = SignState::getInstance();
+  
+  if (!signState.hasImageData()) {
+    return; // No image data available
+  }
+  
+  const std::vector<uint8_t>& imageData = signState.getImageData();
+  
+  // Position the 32x8 image in the bottom right corner of the 128x64 display
+  const int offsetX = DISPLAY_WIDTH - SignState::IMAGE_WIDTH;
+  const int offsetY = DISPLAY_HEIGHT - SignState::IMAGE_HEIGHT;
+  
+  // Render the monochrome bitmap
+  for (int y = 0; y < SignState::IMAGE_HEIGHT; y++) {
+    for (int x = 0; x < SignState::IMAGE_WIDTH; x++) {
+      int const bitIndex = y * SignState::IMAGE_WIDTH + x;
+      int const byteIndex = bitIndex / 8;
+      int const bitPosition = bitIndex % 8;
+      
+      if (byteIndex < imageData.size()) {
+        bool const isPixelSet = (imageData[byteIndex] & (1 << (7 - bitPosition))) != 0;
+        
+        if (isPixelSet) {
+          u8g2.drawPixel(offsetX + x, offsetY + y);
+        }
+      }
+    }
+  }
 }

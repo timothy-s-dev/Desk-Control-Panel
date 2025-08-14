@@ -2,6 +2,7 @@
 #define DISPLAY_H
 
 #include "app_state.h"
+#include "sign_state.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
 
@@ -24,17 +25,12 @@ public:
 private:
   // Private constructor for singleton
   Display() = default;
-  
-  // Instance variables for bouncing box animation
-  int boxX = 0;
-  int boxDeltaX = 1;
-  int boxY = 24;
-  int boxDeltaY = 1;
 
   // Display instance
   U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2{U8G2_R0, U8X8_PIN_NONE};
 
   auto printCentered(const char* text, int y) -> void;
+  auto renderSignImage() -> void;
 };
 
 #endif // DISPLAY_H

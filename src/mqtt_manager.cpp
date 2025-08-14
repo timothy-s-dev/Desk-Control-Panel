@@ -1,5 +1,6 @@
 #include "mqtt_manager.h"
 #include "config.h"
+#include "sign_state.h"
 #include <Arduino.h>
 #include <ctime>
 #include <Preferences.h>
@@ -93,6 +94,7 @@ auto MQTTManager::setupMQTT() -> void {
   Logger.debug(MAIN_LOG, "Setting up MQTT connection...");
 
   mqtt_client.setServer(mqtt_server.c_str(), mqtt_port);
+  mqtt_client.setCallback(onMqttMessage);
 
   // Increase MQTT buffer size to handle larger discovery messages
   mqtt_client.setBufferSize(2048);
@@ -129,6 +131,9 @@ auto MQTTManager::mqttReconnect() -> void {
     
     // Publish Home Assistant discovery message
     publishDiscoveryMessage();
+    
+    // Subscribe to sign image topic
+    subscribeToSignImage();
     
   } else {
     Logger.error(MAIN_LOG, "MQTT connection failed, rc=%d. Retrying in %lu ms", mqtt_client.state(), MQTT_RECONNECT_INTERVAL);
@@ -218,5 +223,31 @@ auto MQTTManager::publishDiscoveryMessage() -> void {
     Logger.debug(MAIN_LOG, "Payload length: %d bytes", json_string.length());
   } else {
     Logger.error(MAIN_LOG, "Failed to publish discovery message, MQTT client state: %d", mqtt_client.state());
+  }
+}
+
+auto MQTTManager::subscribeToSignImage() -> void {
+  const char* topic = "office_sign/image/set";
+  if (mqtt_client.subscribe(topic)) {
+    Logger.debug(MAIN_LOG, "Subscribed to sign image topic: %s", topic);
+  } else {
+    Logger.error(MAIN_LOG, "Failed to subscribe to sign image topic: %s", topic);
+  }
+}
+
+auto MQTTManager::onMqttMessage(char* topic, byte* payload, unsigned int length) -> void {
+  Logger.debug(MAIN_LOG, "MQTT message received on topic: %s, length: %d", topic, length);
+  
+  // Convert payload to string
+  String message;
+  message.reserve(length + 1);
+  for (unsigned int i = 0; i < length; i++) {
+    message += static_cast<char>(payload[i]);
+  }
+  
+  // Check if this is a sign image update
+  if (strcmp(topic, "office_sign/image/set") == 0) {
+    Logger.debug(MAIN_LOG, "Processing sign image update");
+    SignState::getInstance().onImageReceived(message);
   }
 }

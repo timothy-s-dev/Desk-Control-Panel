@@ -3,6 +3,7 @@
 #include "mqtt_manager.h"
 #include "ota_manager.h"
 #include "rotary_encoder.h"
+#include "sign_state.h"
 #include "time_manager.h"
 #include <Arduino.h>
 #include <WiFi.h>
@@ -66,6 +67,7 @@ void setup() {
   
   OTAManager::getInstance().init();
   AppState::getInstance().init();
+  SignState::getInstance().init();
   TimeManager::getInstance().init();
   MQTTManager::getInstance().init();
 
@@ -82,6 +84,9 @@ void loop() {
 
   // Handle time updates
   TimeManager::getInstance().update();
+
+  // Handle sign state updates
+  SignState::getInstance().update();
 
   // Handle MQTT connection
   MQTTManager::getInstance().update();

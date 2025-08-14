@@ -19,6 +19,7 @@ public:
   auto update() -> void;
   auto publishButtonState(int button_num, bool pressed) -> void;
   auto publishAction(const String& action) -> void;
+  auto subscribeToSignImage() -> void;
 
 private:
   MQTTManager() = default;
@@ -41,6 +42,7 @@ private:
   auto isConnected() -> bool;
   auto publishDiscoveryMessage() -> void;
   auto publishMessage(const char* topic, const char* message) -> void;
+  static auto onMqttMessage(char* topic, byte* payload, unsigned int length) -> void;
 };
 
 #endif // MQTT_MANAGER_H
